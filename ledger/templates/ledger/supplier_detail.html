@@ -1,0 +1,139 @@
+{% extends "ledger/base.html" %}
+{% load humanize %}
+
+{% block title %}{{ supplier.name }} - Construction Ledger{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-3">
+    <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+    <nav aria-label="breadcrumb" class="mb-0">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'ledger:supplier_list' %}">Suppliers</a></li>
+            <li class="breadcrumb-item active">{{ supplier.name }}</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">{{ supplier.name }}</h4>
+    <button class="btn btn-accent btn-sm" data-bs-toggle="modal" data-bs-target="#renameModal">
+        <i class="bi bi-pencil"></i> Rename
+    </button>
+</div>
+
+{% if messages %}
+{% for message in messages %}
+<div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col">
+        <div class="card stat-card p-3">
+            <div class="stat-label">Entries</div>
+            <div class="stat-value">{{ totals.entry_count }}</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card stat-card p-3">
+            <div class="stat-label">Total Cost</div>
+            <div class="stat-value">${{ totals.total_cost|floatformat:2|intcomma|default:"0.00" }}</div>
+        </div>
+    </div>
+    {% for lm in lm_subtotals %}
+    <div class="col">
+        <div class="card p-3" style="border-left: 4px solid {% if lm.code == 'L' %}#3b82f6{% elif lm.code == 'M' %}#10b981{% elif lm.code == 'U' %}#8b5cf6{% else %}#6b7280{% endif %};">
+            <div class="stat-label">{{ lm.label }} <small class="text-muted">({{ lm.count }})</small></div>
+            <div class="stat-value">${{ lm.total|floatformat:2|intcomma }}</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Entries Table -->
+<div class="card p-0">
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>
+                        <a class="sort-link" href="?sort=date&dir={% if current_sort == 'date' and current_dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Date {% if current_sort == 'date' %}{% if current_dir == 'asc' %}<i class="bi bi-caret-up-fill"></i>{% else %}<i class="bi bi-caret-down-fill"></i>{% endif %}{% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        <a class="sort-link" href="?sort=description&dir={% if current_sort == 'description' and current_dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Description {% if current_sort == 'description' %}{% if current_dir == 'asc' %}<i class="bi bi-caret-up-fill"></i>{% else %}<i class="bi bi-caret-down-fill"></i>{% endif %}{% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        <a class="sort-link" href="?sort=type_description__code&dir={% if current_sort == 'type_description__code' and current_dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Type {% if current_sort == 'type_description__code' %}{% if current_dir == 'asc' %}<i class="bi bi-caret-up-fill"></i>{% else %}<i class="bi bi-caret-down-fill"></i>{% endif %}{% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        <a class="sort-link" href="?sort=lm&dir={% if current_sort == 'lm' and current_dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            L/M {% if current_sort == 'lm' %}{% if current_dir == 'asc' %}<i class="bi bi-caret-up-fill"></i>{% else %}<i class="bi bi-caret-down-fill"></i>{% endif %}{% endif %}
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a class="sort-link" href="?sort=cost&dir={% if current_sort == 'cost' and current_dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Cost {% if current_sort == 'cost' %}{% if current_dir == 'asc' %}<i class="bi bi-caret-up-fill"></i>{% else %}<i class="bi bi-caret-down-fill"></i>{% endif %}{% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        <a class="sort-link" href="?sort=posted&dir={% if current_sort == 'posted' and current_dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Posted {% if current_sort == 'posted' %}{% if current_dir == 'asc' %}<i class="bi bi-caret-up-fill"></i>{% else %}<i class="bi bi-caret-down-fill"></i>{% endif %}{% endif %}
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in entries %}
+                <tr>
+                    <td class="text-nowrap">{{ e.date|date:"m/d/Y"|default:"—" }}</td>
+                    <td><a href="{% url 'ledger:entry_detail' e.pk %}">{{ e.description|truncatechars:60|default:"—" }}</a></td>
+                    <td>{{ e.type_description|default:"—" }}</td>
+                    <td>
+                        {% if e.lm %}
+                        <span class="badge badge-lm-{{ e.lm }}">{{ e.get_lm_display }}</span>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td class="text-end text-nowrap">{% if e.cost != None %}${{ e.cost|floatformat:2|intcomma }}{% else %}—{% endif %}</td>
+                    <td>{{ e.posted|default:"—" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No entries for this supplier.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Rename Modal -->
+<div class="modal fade" id="renameModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background:#22262e; border:1px solid #444;">
+            <form method="post" action="{% url 'ledger:supplier_rename' supplier.pk %}">
+                {% csrf_token %}
+                <div class="modal-header" style="border-color:#444;">
+                    <h5 class="modal-title">Rename Supplier</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="new_name" class="form-label">New name</label>
+                    <input type="text" class="form-control" id="new_name" name="new_name" value="{{ supplier.name }}" required>
+                </div>
+                <div class="modal-footer" style="border-color:#444;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-accent">Rename</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

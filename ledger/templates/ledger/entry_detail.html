@@ -1,0 +1,150 @@
+{% extends "ledger/base.html" %}
+{% load humanize %}
+
+{% block title %}Entry #{{ entry.pk }} - Construction Ledger{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-3">
+    <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+    <nav aria-label="breadcrumb" class="mb-0">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'ledger:entry_list' %}">Entries</a></li>
+            <li class="breadcrumb-item active">Entry #{{ entry.pk }}</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">{{ entry.description|default:"Entry Detail" }}</h4>
+    <div class="d-flex gap-2">
+        <a href="{% url 'ledger:entry_edit' entry.pk %}" class="btn btn-accent"><i class="bi bi-pencil"></i> Edit</a>
+        <a href="{% url 'ledger:entry_split' entry.pk %}" class="btn btn-outline-secondary"><i class="bi bi-scissors"></i> Split</a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Main Info -->
+    <div class="col-lg-8">
+        <div class="card p-4">
+            <h6 class="text-muted mb-3">General Information</h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Date</small>
+                        <strong>{{ entry.date|date:"F d, Y"|default:"—" }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Supplier</small>
+                        <strong>
+                            {% if entry.supplier %}
+                            <a href="{% url 'ledger:supplier_detail' entry.supplier.pk %}">{{ entry.supplier.name }}</a>
+                            {% else %}—{% endif %}
+                        </strong>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Type</small>
+                        <strong>{{ entry.type_description|default:"—" }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <small class="text-muted d-block">L/M</small>
+                        {% if entry.lm %}
+                        <span class="badge badge-lm-{{ entry.lm }}">{{ entry.get_lm_display }}</span>
+                        {% else %}<strong>—</strong>{% endif %}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Posted</small>
+                        <strong>{{ entry.posted|default:"—" }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Description</small>
+                        <strong>{{ entry.description|default:"—" }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Stage</small>
+                        <strong>{{ entry.stage|default:"—" }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <small class="text-muted d-block">LC-Stage</small>
+                        <strong>{{ entry.lc_stage|default:"—" }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Supervisor</small>
+                        <strong>{{ entry.supervisor|default:"—" }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial -->
+    <div class="col-lg-4">
+        <div class="card p-4 mb-3">
+            <h6 class="text-muted mb-3">Financial</h6>
+            <div class="mb-3">
+                <small class="text-muted d-block">Estimate</small>
+                <strong>{% if entry.estimate != None %}${{ entry.estimate|floatformat:2|intcomma }}{% else %}—{% endif %}</strong>
+            </div>
+            <div class="mb-3">
+                <small class="text-muted d-block">QTY</small>
+                <strong>{{ entry.qty|default:"—" }}</strong>
+            </div>
+            <div class="mb-3">
+                <small class="text-muted d-block">Supplies Cost</small>
+                <strong>{% if entry.supplies_cost != None %}${{ entry.supplies_cost|floatformat:2|intcomma }}{% else %}—{% endif %}</strong>
+            </div>
+            <div class="mb-3">
+                <small class="text-muted d-block">Tax/Fees</small>
+                <strong>{% if entry.tax_fees != None %}${{ entry.tax_fees|floatformat:2|intcomma }}{% else %}—{% endif %}</strong>
+            </div>
+            <div class="mb-3">
+                <small class="text-muted d-block">Cost</small>
+                <span class="fs-4 fw-bold" style="color:var(--accent);">{% if entry.cost != None %}${{ entry.cost|floatformat:2|intcomma }}{% else %}—{% endif %}</span>
+            </div>
+            <div class="mb-0">
+                <small class="text-muted d-block">Invoiced Amount</small>
+                <strong>{% if entry.invoiced_amt != None %}${{ entry.invoiced_amt|floatformat:2|intcomma }}{% else %}—{% endif %}</strong>
+            </div>
+        </div>
+
+        <div class="card p-4">
+            <h6 class="text-muted mb-3">Additional Details</h6>
+            <div class="mb-3">
+                <small class="text-muted d-block">Invoice #</small>
+                <strong>{{ entry.invoice_number|default:"—" }}</strong>
+            </div>
+            <div class="mb-3">
+                <small class="text-muted d-block">Delivery Type</small>
+                <strong>{{ entry.delivery_type|default:"—" }}</strong>
+            </div>
+            <div class="mb-3">
+                <small class="text-muted d-block">Materials</small>
+                <strong>{{ entry.materials|default:"—" }}</strong>
+            </div>
+            <div class="mb-3">
+                <small class="text-muted d-block">Book #</small>
+                <strong>{{ entry.book_number|default:"—" }}</strong>
+            </div>
+            <div class="mb-0">
+                <small class="text-muted d-block">Notes</small>
+                <strong>{{ entry.notes|default:"—" }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

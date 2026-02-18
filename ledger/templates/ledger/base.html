@@ -1,0 +1,92 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Construction Ledger{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bs-body-bg: #1a1d23;
+            --bs-body-color: #e0e0e0;
+            --accent: #f0ad4e;
+            --accent-dim: #c48c30;
+        }
+        body { background: #1a1d23; min-height: 100vh; }
+        .navbar { background: #12151a !important; border-bottom: 2px solid var(--accent); }
+        .navbar-brand { color: var(--accent) !important; font-weight: 700; letter-spacing: 1px; }
+        .nav-link { color: #b0b0b0 !important; }
+        .nav-link:hover, .nav-link.active { color: var(--accent) !important; }
+        .card { background: #22262e; border: 1px solid #333; }
+        .stat-card { border-left: 4px solid var(--accent); }
+        .stat-card .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+        .stat-card .stat-label { color: #999; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .table { --bs-table-bg: transparent; --bs-table-color: #e0e0e0; }
+        .table thead th { background: #2a2e36; color: var(--accent); border-bottom: 2px solid var(--accent-dim); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .table tbody tr:hover { background: rgba(240,173,78,0.05); }
+        .page-link { background: #22262e; border-color: #444; color: #e0e0e0; }
+        .page-link:hover { background: var(--accent); color: #000; }
+        .page-item.active .page-link { background: var(--accent); border-color: var(--accent); color: #000; }
+        .btn-accent { background: var(--accent); color: #000; border: none; font-weight: 600; }
+        .btn-accent:hover { background: var(--accent-dim); color: #000; }
+        .badge-lm-L { background: #3b82f6; }
+        .badge-lm-M { background: #10b981; }
+        .badge-lm-U { background: #8b5cf6; }
+        .badge-lm-X { background: #6b7280; }
+        .filter-bar { background: #22262e; border: 1px solid #333; border-radius: 8px; }
+        a { color: var(--accent); }
+        a:hover { color: #fff; }
+        .form-select, .form-control { background: #2a2e36; border-color: #444; color: #e0e0e0; }
+        .form-select:focus, .form-control:focus { background: #2a2e36; border-color: var(--accent); color: #e0e0e0; box-shadow: 0 0 0 0.2rem rgba(240,173,78,0.25); }
+        .breadcrumb { background: transparent; }
+        .breadcrumb-item a { color: var(--accent); }
+        .sort-link { color: var(--accent); text-decoration: none; }
+        .sort-link:hover { color: #fff; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'ledger:dashboard' %}">
+                <i class="bi bi-building"></i> Construction Ledger
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'ledger:dashboard' %}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'entry' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'ledger:entry_list' %}">
+                            <i class="bi bi-list-ul"></i> Entries
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'supplier' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'ledger:supplier_list' %}">
+                            <i class="bi bi-truck"></i> Suppliers
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer class="text-center text-muted py-4 mt-5" style="font-size:0.8rem;">
+        Construction Ledger &copy; 2022
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

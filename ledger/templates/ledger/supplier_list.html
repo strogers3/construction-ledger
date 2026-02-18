@@ -1,0 +1,46 @@
+{% extends "ledger/base.html" %}
+{% load humanize %}
+
+{% block title %}Suppliers - Construction Ledger{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+    <h4 class="mb-0"><i class="bi bi-truck"></i> Suppliers</h4>
+</div>
+
+<div class="card p-0">
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>
+                        <a class="sort-link" href="?sort=name&dir={% if current_sort == 'name' and current_dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Supplier {% if current_sort == 'name' %}{% if current_dir == 'asc' %}<i class="bi bi-caret-up-fill"></i>{% else %}<i class="bi bi-caret-down-fill"></i>{% endif %}{% endif %}
+                        </a>
+                    </th>
+                    <th class="text-center">
+                        <a class="sort-link" href="?sort=entry_count&dir={% if current_sort == 'entry_count' and current_dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Entries {% if current_sort == 'entry_count' %}{% if current_dir == 'asc' %}<i class="bi bi-caret-up-fill"></i>{% else %}<i class="bi bi-caret-down-fill"></i>{% endif %}{% endif %}
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a class="sort-link" href="?sort=total_cost&dir={% if current_sort == 'total_cost' and current_dir == 'asc' %}desc{% else %}asc{% endif %}">
+                            Total Cost {% if current_sort == 'total_cost' %}{% if current_dir == 'asc' %}<i class="bi bi-caret-up-fill"></i>{% else %}<i class="bi bi-caret-down-fill"></i>{% endif %}{% endif %}
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in suppliers %}
+                <tr>
+                    <td><a href="{% url 'ledger:supplier_detail' s.pk %}">{{ s.name }}</a></td>
+                    <td class="text-center">{{ s.entry_count }}</td>
+                    <td class="text-end">{% if s.total_cost != None %}${{ s.total_cost|floatformat:2|intcomma }}{% else %}$0.00{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "ledger/base.html" %}
+{% load humanize %}
+
+{% block title %}Rename Conflict - Construction Ledger{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-3">
+    <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+    <nav aria-label="breadcrumb" class="mb-0">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'ledger:supplier_list' %}">Suppliers</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'ledger:supplier_detail' supplier.pk %}">{{ supplier.name }}</a></li>
+            <li class="breadcrumb-item active">Rename</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="card p-4" style="max-width:600px;">
+    <h5 class="mb-3" style="color:var(--accent);"><i class="bi bi-exclamation-triangle"></i> Supplier Already Exists</h5>
+    <p>
+        A supplier named <strong>"{{ new_name }}"</strong> already exists with
+        <strong>{{ existing.constructionentry_set.count }}</strong> entries.
+    </p>
+    <p>
+        If you continue, <strong>"{{ supplier.name }}"</strong> will be merged into
+        <strong>"{{ new_name }}"</strong> &mdash; all {{ supplier.constructionentry_set.count }} entries
+        will be reassigned to the existing supplier, and <strong>"{{ supplier.name }}"</strong> will be deleted.
+    </p>
+
+    <div class="d-flex gap-2 mt-3">
+        <form method="post" action="{% url 'ledger:supplier_rename' supplier.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="new_name" value="{{ new_name }}">
+            <input type="hidden" name="confirm_override" value="1">
+            <button type="submit" class="btn btn-accent"><i class="bi bi-check-lg"></i> Merge Suppliers</button>
+        </form>
+        <a href="{% url 'ledger:supplier_detail' supplier.pk %}" class="btn btn-secondary">Cancel</a>
+    </div>
+</div>
+{% endblock %}
