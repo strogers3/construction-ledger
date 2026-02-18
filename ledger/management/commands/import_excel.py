@@ -20,6 +20,11 @@ class Command(BaseCommand):
         wb = openpyxl.load_workbook(filepath, data_only=True)
         ws = wb['Const Actual']
 
+        # Clear existing entries to avoid duplicates
+        deleted_count = ConstructionEntry.objects.all().delete()[0]
+        if deleted_count:
+            self.stdout.write(f"Cleared {deleted_count} existing entries")
+
         # Pre-build TypeDescription lookup from spreadsheet data
         type_map = {}  # code -> TypeDescription instance
         created_count = 0
@@ -113,8 +118,13 @@ class Command(BaseCommand):
                 notes=clean_str(19, 5000),
                 type_description=type_desc_obj,
             )
-            entry.save()
-            created_count += 1
+            try:
+                entry.save()
+                created_count += 1
+            except Exception as e:
+                self.stderr.write(f"Error on row {row_num}: {e}")
+                self.stderr.write(f"  Values: estimate={to_decimal(6)}, qty={to_decimal(7)}, supplies_cost={to_decimal(8)}, tax_fees={to_decimal(9)}, cost={to_decimal(10)}, invoiced_amt={to_decimal(11)}")
+                raise
 
         self.stdout.write(self.style.SUCCESS(
             f"Import complete: {created_count} entries created, {skipped_count} empty rows skipped."
