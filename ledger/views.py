@@ -4,6 +4,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Sum, Count, Q, Min, Max
 from django.core.paginator import Paginator
 from django.forms import formset_factory
+from django.contrib.auth.decorators import login_required, permission_required
 
 from .models import ConstructionEntry, Supplier, TypeDescription
 from django.contrib import messages
@@ -11,6 +12,7 @@ from django.contrib import messages
 from .forms import ConstructionEntryForm
 
 
+@login_required
 def dashboard(request):
     entries = ConstructionEntry.objects.all()
     total_entries = entries.count()
@@ -88,6 +90,7 @@ def dashboard(request):
     return render(request, 'ledger/dashboard.html', context)
 
 
+@login_required
 def entry_list(request):
     entries = ConstructionEntry.objects.select_related('supplier', 'type_description').all()
 
@@ -173,6 +176,7 @@ def entry_list(request):
     return render(request, 'ledger/entry_list.html', context)
 
 
+@login_required
 def entry_detail(request, pk):
     entry = get_object_or_404(
         ConstructionEntry.objects.select_related('supplier', 'type_description'),
@@ -181,6 +185,7 @@ def entry_detail(request, pk):
     return render(request, 'ledger/entry_detail.html', {'entry': entry})
 
 
+@login_required
 def supplier_list(request):
     suppliers = (
         Supplier.objects.annotate(
@@ -204,6 +209,7 @@ def supplier_list(request):
     })
 
 
+@login_required
 def supplier_detail(request, pk):
     supplier = get_object_or_404(Supplier, pk=pk)
     entries = (
@@ -246,6 +252,8 @@ def supplier_detail(request, pk):
     })
 
 
+@login_required
+@permission_required('ledger.change_constructionentry', raise_exception=True)
 def entry_edit(request, pk):
     entry = get_object_or_404(ConstructionEntry, pk=pk)
     if request.method == 'POST':
@@ -270,6 +278,8 @@ def _divide_amount(amount, n):
     return parts
 
 
+@login_required
+@permission_required('ledger.change_constructionentry', raise_exception=True)
 def entry_split(request, pk):
     entry = get_object_or_404(
         ConstructionEntry.objects.select_related('supplier', 'type_description'),
@@ -328,6 +338,8 @@ def entry_split(request, pk):
     })
 
 
+@login_required
+@permission_required('ledger.change_supplier', raise_exception=True)
 def supplier_rename(request, pk):
     supplier = get_object_or_404(Supplier, pk=pk)
 

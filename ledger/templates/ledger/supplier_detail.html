@@ -16,9 +16,11 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="mb-0">{{ supplier.name }}</h4>
+    {% if perms.ledger.change_supplier %}
     <button class="btn btn-accent btn-sm" data-bs-toggle="modal" data-bs-target="#renameModal">
         <i class="bi bi-pencil"></i> Rename
     </button>
+    {% endif %}
 </div>
 
 {% if messages %}
