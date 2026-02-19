@@ -120,3 +120,36 @@ class UserEditForm(forms.ModelForm):
             user.save()
             user.groups.set(self.cleaned_data.get('groups') or [])
         return user
+
+
+# Ledger permissions presented with friendly labels, grouped by category.
+# Each tuple is (codename, label, category).
+LEDGER_PERMISSIONS = [
+    # Entries
+    ('view_constructionentry',   'View entries',           'Entries'),
+    ('add_constructionentry',    'Add entries',            'Entries'),
+    ('change_constructionentry', 'Edit entries',           'Entries'),
+    ('delete_constructionentry', 'Delete entries',         'Entries'),
+    # Suppliers
+    ('view_supplier',            'View suppliers',         'Suppliers'),
+    ('add_supplier',             'Add suppliers',          'Suppliers'),
+    ('change_supplier',          'Edit / rename / merge suppliers', 'Suppliers'),
+    ('delete_supplier',          'Delete suppliers',       'Suppliers'),
+    # Type descriptions
+    ('view_typedescription',     'View type descriptions', 'Type Descriptions'),
+    ('change_typedescription',   'Edit type descriptions', 'Type Descriptions'),
+]
+
+LEDGER_PERMISSION_CHOICES = [(code, label) for code, label, _ in LEDGER_PERMISSIONS]
+
+
+class GroupForm(forms.Form):
+    name = forms.CharField(
+        max_length=150,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+    )
+    permissions = forms.MultipleChoiceField(
+        choices=LEDGER_PERMISSION_CHOICES,
+        required=False,
+        widget=forms.CheckboxSelectMultiple(),
+    )
