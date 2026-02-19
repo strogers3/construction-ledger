@@ -11,7 +11,10 @@ from django.core.exceptions import PermissionDenied
 from .models import ConstructionEntry, Supplier, TypeDescription, EntryChangeLog
 from django.contrib import messages
 
-from .forms import ConstructionEntryForm, UserCreateForm, UserEditForm
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
+
+from .forms import ConstructionEntryForm, UserCreateForm, UserEditForm, GroupForm, LEDGER_PERMISSIONS
 
 
 @login_required
@@ -467,3 +470,121 @@ def user_edit(request, pk):
     else:
         form = UserEditForm(instance=edited_user)
     return render(request, 'ledger/user_edit.html', {'form': form, 'edited_user': edited_user})
+
+
+def _group_form_initial(group):
+    """Return initial permission codenames for a group, filtered to ledger permissions."""
+    known = {code for code, _, _ in LEDGER_PERMISSIONS}
+    return list(
+        group.permissions
+        .filter(content_type__app_label='ledger')
+        .values_list('codename', flat=True)
+        .filter(codename__in=known)
+    )
+
+
+def _perm_categories(checked_codes):
+    """Return LEDGER_PERMISSIONS grouped by category with checked state for the template."""
+    from itertools import groupby
+    result = []
+    for category, perms in groupby(LEDGER_PERMISSIONS, key=lambda x: x[2]):
+        result.append({
+            'category': category,
+            'perms': [
+                {'code': code, 'label': label, 'checked': code in checked_codes}
+                for code, label, _ in perms
+            ],
+        })
+    return result
+
+
+def _save_group_permissions(group, codenames):
+    """Set a group's permissions to the given ledger codenames."""
+    perms = Permission.objects.filter(
+        codename__in=codenames,
+        content_type__app_label='ledger',
+    )
+    group.permissions.set(perms)
+
+
+@login_required
+def group_list(request):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    groups = Group.objects.prefetch_related('permissions').annotate(
+        member_count=Count('user')
+    ).order_by('name')
+    known_codes = {code for code, _, _ in LEDGER_PERMISSIONS}
+    perm_labels = {code: label for code, label, _ in LEDGER_PERMISSIONS}
+    group_data = []
+    for g in groups:
+        active = [
+            perm_labels[p.codename]
+            for p in g.permissions.all()
+            if p.codename in known_codes
+        ]
+        group_data.append({'group': g, 'active_perms': active})
+    return render(request, 'ledger/group_list.html', {'group_data': group_data})
+
+
+@login_required
+def group_create(request):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    if request.method == 'POST':
+        form = GroupForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            if Group.objects.filter(name=name).exists():
+                form.add_error('name', 'A group with this name already exists.')
+            else:
+                group = Group.objects.create(name=name)
+                _save_group_permissions(group, form.cleaned_data.get('permissions', []))
+                messages.success(request, f'Group "{name}" created.')
+                return redirect('ledger:group_list')
+        checked = set(request.POST.getlist('permissions'))
+    else:
+        form = GroupForm()
+        checked = set()
+    return render(request, 'ledger/group_edit.html', {
+        'form': form,
+        'perm_categories': _perm_categories(checked),
+        'is_create': True,
+    })
+
+
+@login_required
+def group_edit(request, pk):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    group = get_object_or_404(Group, pk=pk)
+    if request.method == 'POST':
+        if 'delete' in request.POST:
+            name = group.name
+            group.delete()
+            messages.success(request, f'Group "{name}" deleted.')
+            return redirect('ledger:group_list')
+        form = GroupForm(request.POST)
+        if form.is_valid():
+            new_name = form.cleaned_data['name']
+            if Group.objects.filter(name=new_name).exclude(pk=pk).exists():
+                form.add_error('name', 'A group with this name already exists.')
+            else:
+                group.name = new_name
+                group.save()
+                _save_group_permissions(group, form.cleaned_data.get('permissions', []))
+                messages.success(request, f'Group "{group.name}" updated.')
+                return redirect('ledger:group_list')
+        checked = set(request.POST.getlist('permissions'))
+    else:
+        checked = set(_group_form_initial(group))
+        form = GroupForm(initial={
+            'name': group.name,
+            'permissions': list(checked),
+        })
+    return render(request, 'ledger/group_edit.html', {
+        'form': form,
+        'group': group,
+        'perm_categories': _perm_categories(checked),
+        'is_create': False,
+    })
