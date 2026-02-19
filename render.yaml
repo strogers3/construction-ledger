@@ -4,7 +4,7 @@ services:
     plan: free
     runtime: python
     buildCommand: ./build.sh
-    startCommand: gunicorn construction_project.wsgi:application
+    startCommand: gunicorn construction_project.wsgi:application --bind 0.0.0.0:$PORT --workers 2
     envVars:
       - key: SECRET_KEY
         generateValue: true
