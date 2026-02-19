@@ -16,7 +16,8 @@ from .forms import ConstructionEntryForm
 def dashboard(request):
     entries = ConstructionEntry.objects.all()
     total_entries = entries.count()
-    total_cost = entries.aggregate(total=Sum('cost'))['total'] or 0
+    total_cost = entries.exclude(lm='X').aggregate(total=Sum('cost'))['total'] or 0
+    total_transfers = entries.filter(lm='X').aggregate(total=Sum('cost'))['total'] or 0
     total_suppliers = Supplier.objects.count()
     date_range = entries.aggregate(min_date=Min('date'), max_date=Max('date'))
 
@@ -71,6 +72,7 @@ def dashboard(request):
     context = {
         'total_entries': total_entries,
         'total_cost': total_cost,
+        'total_transfers': total_transfers,
         'total_suppliers': total_suppliers,
         'date_range': date_range,
         'type_labels': type_labels,

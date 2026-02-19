@@ -8,7 +8,7 @@
 
 <!-- Stat Cards -->
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
+    <div class="col-md-2">
         <div class="card stat-card p-3">
             <div class="stat-label">Total Entries</div>
             <div class="stat-value">{{ total_entries|intcomma }}</div>
@@ -16,17 +16,23 @@
     </div>
     <div class="col-md-3">
         <div class="card stat-card p-3">
-            <div class="stat-label">Total Cost</div>
+            <div class="stat-label">Total Cost <small class="text-muted">(excl. Transfers)</small></div>
             <div class="stat-value">${{ total_cost|floatformat:2|intcomma }}</div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card stat-card p-3">
+            <div class="stat-label">Total Transfers</div>
+            <div class="stat-value"><a href="{% url 'ledger:entry_list' %}?lm=X" style="color:inherit;text-decoration:none;">${{ total_transfers|floatformat:2|intcomma }}</a></div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card p-3">
             <div class="stat-label">Suppliers</div>
             <div class="stat-value">{{ total_suppliers }}</div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
         <div class="card stat-card p-3">
             <div class="stat-label">Date Range</div>
             <div class="stat-value" style="font-size:1.1rem;">
