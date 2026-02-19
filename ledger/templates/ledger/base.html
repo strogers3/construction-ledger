@@ -86,6 +86,11 @@
                             <i class="bi bi-clock-history"></i> Audit Log
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'user' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'ledger:user_list' %}">
+                            <i class="bi bi-people"></i> Users
+                        </a>
+                    </li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav ms-auto">

@@ -1,0 +1,92 @@
+{% extends "ledger/base.html" %}
+
+{% block title %}Edit {{ edited_user.username }} - Construction Ledger{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-3">
+    <a href="{% url 'ledger:user_list' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+    <nav aria-label="breadcrumb" class="mb-0">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'ledger:user_list' %}">Users</a></li>
+            <li class="breadcrumb-item active">{{ edited_user.username }}</li>
+        </ol>
+    </nav>
+</div>
+
+<h4 class="mb-4">Edit User: {{ edited_user.username }}</h4>
+
+<div class="row">
+    <div class="col-lg-6">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="card p-4 mb-3">
+                <h6 class="text-muted mb-3">Account Details</h6>
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    {{ form.email }}
+                </div>
+                <div class="form-check mb-2">
+                    {{ form.is_active }}
+                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Active</label>
+                </div>
+            </div>
+
+            <div class="card p-4 mb-3">
+                <h6 class="text-muted mb-3">Change Password <small class="text-muted fw-normal">(leave blank to keep current)</small></h6>
+                <div class="mb-3">
+                    <label class="form-label">New Password</label>
+                    {{ form.new_password1 }}
+                </div>
+                <div class="mb-0">
+                    <label class="form-label">Confirm New Password</label>
+                    {{ form.new_password2 }}
+                    {% if form.new_password2.errors %}
+                        <div class="text-danger small mt-1">{{ form.new_password2.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card p-4 mb-3">
+                <h6 class="text-muted mb-3">Permissions</h6>
+                <div class="mb-3">
+                    <label class="form-label">Groups</label>
+                    <div class="ps-1">
+                        {% for choice in form.groups %}
+                        <div class="form-check">
+                            {{ choice.tag }}
+                            <label class="form-check-label" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="form-check">
+                    {{ form.is_staff }}
+                    <label class="form-check-label" for="{{ form.is_staff.id_for_label }}">Admin (staff access)</label>
+                    <div class="form-text text-muted">Grants access to Audit Log, User Management, and Django admin.</div>
+                </div>
+            </div>
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-accent"><i class="bi bi-check-lg"></i> Save Changes</button>
+                <a href="{% url 'ledger:user_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -4,12 +4,14 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Sum, Count, Q, Min, Max
 from django.core.paginator import Paginator
 from django.forms import formset_factory
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, permission_required
+from django.core.exceptions import PermissionDenied
 
 from .models import ConstructionEntry, Supplier, TypeDescription, EntryChangeLog
 from django.contrib import messages
 
-from .forms import ConstructionEntryForm
+from .forms import ConstructionEntryForm, UserCreateForm, UserEditForm
 
 
 @login_required
@@ -425,3 +427,43 @@ def audit_log(request):
     paginator = Paginator(logs, 50)
     page_obj = paginator.get_page(request.GET.get('page'))
     return render(request, 'ledger/audit_log.html', {'page_obj': page_obj})
+
+
+@login_required
+def user_list(request):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    users = get_user_model().objects.prefetch_related('groups').order_by('username')
+    return render(request, 'ledger/user_list.html', {'users': users})
+
+
+@login_required
+def user_create(request):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    if request.method == 'POST':
+        form = UserCreateForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'User "{form.cleaned_data["username"]}" created successfully.')
+            return redirect('ledger:user_list')
+    else:
+        form = UserCreateForm()
+    return render(request, 'ledger/user_create.html', {'form': form})
+
+
+@login_required
+def user_edit(request, pk):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    User = get_user_model()
+    edited_user = get_object_or_404(User, pk=pk)
+    if request.method == 'POST':
+        form = UserEditForm(request.POST, instance=edited_user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'User "{edited_user.username}" updated successfully.')
+            return redirect('ledger:user_list')
+    else:
+        form = UserEditForm(instance=edited_user)
+    return render(request, 'ledger/user_edit.html', {'form': form, 'edited_user': edited_user})
