@@ -6,7 +6,7 @@ from django.core.paginator import Paginator
 from django.forms import formset_factory
 from django.contrib.auth.decorators import login_required, permission_required
 
-from .models import ConstructionEntry, Supplier, TypeDescription
+from .models import ConstructionEntry, Supplier, TypeDescription, EntryChangeLog
 from django.contrib import messages
 
 from .forms import ConstructionEntryForm
@@ -184,7 +184,8 @@ def entry_detail(request, pk):
         ConstructionEntry.objects.select_related('supplier', 'type_description'),
         pk=pk
     )
-    return render(request, 'ledger/entry_detail.html', {'entry': entry})
+    change_logs = entry.change_logs.select_related('user').order_by('-timestamp')
+    return render(request, 'ledger/entry_detail.html', {'entry': entry, 'change_logs': change_logs})
 
 
 @login_required
@@ -259,13 +260,50 @@ def supplier_detail(request, pk):
 def entry_edit(request, pk):
     entry = get_object_or_404(ConstructionEntry, pk=pk)
     if request.method == 'POST':
+        old_values = {
+            f: str(getattr(entry, f)) if getattr(entry, f) is not None else ''
+            for f in ConstructionEntryForm.Meta.fields
+        }
         form = ConstructionEntryForm(request.POST, instance=entry)
         if form.is_valid():
             form.save()
+            changes = {
+                f: {'old': old_values[f], 'new': str(getattr(entry, f)) if getattr(entry, f) is not None else ''}
+                for f in ConstructionEntryForm.Meta.fields
+                if (str(getattr(entry, f)) if getattr(entry, f) is not None else '') != old_values[f]
+            }
+            if changes:
+                _log_entry_change(entry, request.user, 'edit', changes)
             return redirect('ledger:entry_detail', pk=entry.pk)
     else:
         form = ConstructionEntryForm(instance=entry)
     return render(request, 'ledger/entry_edit.html', {'form': form, 'entry': entry})
+
+
+@login_required
+@permission_required('ledger.add_constructionentry', raise_exception=True)
+def entry_create(request):
+    if request.method == 'POST':
+        form = ConstructionEntryForm(request.POST)
+        if form.is_valid():
+            entry = form.save()
+            _log_entry_change(entry, request.user, 'create')
+            return redirect('ledger:entry_detail', pk=entry.pk)
+    else:
+        form = ConstructionEntryForm()
+    return render(request, 'ledger/entry_create.html', {'form': form})
+
+
+def _log_entry_change(entry, user, action, changes=None, notes=''):
+    """Record a create/edit/split action on a ConstructionEntry."""
+    EntryChangeLog.objects.create(
+        entry=entry,
+        entry_id_snapshot=entry.pk if entry else None,
+        user=user,
+        action=action,
+        changes=changes or {},
+        notes=notes,
+    )
 
 
 def _divide_amount(amount, n):
@@ -296,6 +334,7 @@ def entry_split(request, pk):
         if formset.is_valid():
             for form in formset:
                 form.save()
+            _log_entry_change(entry, request.user, 'split', notes=f"Split into {num_splits} parts")
             entry.delete()
             return redirect('ledger:entry_list')
         return render(request, 'ledger/entry_split.html', {
@@ -378,3 +417,11 @@ def supplier_rename(request, pk):
         return redirect('ledger:supplier_detail', pk=supplier.pk)
 
     return redirect('ledger:supplier_detail', pk=pk)
+
+
+@login_required
+def audit_log(request):
+    logs = EntryChangeLog.objects.select_related('entry', 'user').order_by('-timestamp')
+    paginator = Paginator(logs, 50)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    return render(request, 'ledger/audit_log.html', {'page_obj': page_obj})

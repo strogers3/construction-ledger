@@ -149,4 +149,59 @@
         </div>
     </div>
 </div>
+
+{% if change_logs %}
+<div class="mt-4">
+    <div class="card p-4">
+        <h6 class="text-muted mb-3"><i class="bi bi-clock-history"></i> Change History</h6>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Changes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in change_logs %}
+                    <tr>
+                        <td class="text-nowrap text-muted" style="font-size:0.85rem;">{{ log.timestamp|date:"Y-m-d H:i" }}</td>
+                        <td>{{ log.user.username|default:"—" }}</td>
+                        <td>
+                            <span class="badge
+                                {% if log.action == 'create' %}bg-success
+                                {% elif log.action == 'edit' %}bg-primary
+                                {% elif log.action == 'split' %}bg-warning text-dark
+                                {% else %}bg-secondary{% endif %}">
+                                {{ log.get_action_display }}
+                            </span>
+                        </td>
+                        <td style="font-size:0.85rem;">
+                            {% if log.notes %}
+                                <em class="text-muted">{{ log.notes }}</em>
+                            {% elif log.changes %}
+                                <ul class="mb-0 ps-3">
+                                {% for field, diff in log.changes.items %}
+                                    <li>
+                                        <strong>{{ field }}</strong>:
+                                        <span class="text-muted">{{ diff.old|default:"—" }}</span>
+                                        <i class="bi bi-arrow-right"></i>
+                                        {{ diff.new|default:"—" }}
+                                    </li>
+                                {% endfor %}
+                                </ul>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

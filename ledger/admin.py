@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Supplier, TypeDescription, ConstructionEntry
+from .models import Supplier, TypeDescription, ConstructionEntry, EntryChangeLog
 
 
 @admin.register(Supplier)
@@ -22,3 +22,10 @@ class ConstructionEntryAdmin(admin.ModelAdmin):
     list_filter = ['posted', 'lm', 'delivery_type', 'type_description', 'supplier']
     search_fields = ['description', 'notes', 'invoice_number']
     date_hierarchy = 'date'
+
+
+@admin.register(EntryChangeLog)
+class EntryChangeLogAdmin(admin.ModelAdmin):
+    list_display = ['timestamp', 'action', 'entry_id_snapshot', 'user', 'notes']
+    list_filter = ['action', 'user']
+    readonly_fields = ['timestamp', 'entry', 'entry_id_snapshot', 'user', 'action', 'changes', 'notes']

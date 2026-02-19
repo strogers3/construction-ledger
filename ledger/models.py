@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 
 
@@ -70,3 +71,37 @@ class ConstructionEntry(models.Model):
 
     def __str__(self):
         return f"{self.date} - {self.description[:50]}"
+
+
+class EntryChangeLog(models.Model):
+    ACTION_CHOICES = [
+        ('create', 'Create'),
+        ('edit',   'Edit'),
+        ('delete', 'Delete'),
+        ('split',  'Split'),
+    ]
+
+    entry = models.ForeignKey(
+        ConstructionEntry,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='change_logs',
+    )
+    entry_id_snapshot = models.IntegerField(null=True, blank=True)
+    user = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+    )
+    timestamp = models.DateTimeField(auto_now_add=True)
+    action = models.CharField(max_length=10, choices=ACTION_CHOICES)
+    changes = models.JSONField(default=dict, blank=True)
+    notes = models.CharField(max_length=500, blank=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name = "Entry Change Log"
+        verbose_name_plural = "Entry Change Logs"
+
+    def __str__(self):
+        return f"{self.timestamp:%Y-%m-%d %H:%M} — {self.action} entry #{self.entry_id_snapshot}"

@@ -1,0 +1,80 @@
+{% extends "ledger/base.html" %}
+
+{% block title %}New Entry - Construction Ledger{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-3">
+    <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+    <nav aria-label="breadcrumb" class="mb-0">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'ledger:entry_list' %}">Entries</a></li>
+            <li class="breadcrumb-item active">New Entry</li>
+        </ol>
+    </nav>
+</div>
+
+<h4 class="mb-4">New Entry</h4>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="row g-3">
+        <!-- Main Info -->
+        <div class="col-lg-8">
+            <div class="card p-4 mb-3">
+                <h6 class="text-muted mb-3">General Information</h6>
+                <div class="row g-3">
+                    <div class="col-md-6">{{ form.date.label_tag }} {{ form.date }}</div>
+                    <div class="col-md-6">{{ form.supplier.label_tag }} {{ form.supplier }}</div>
+                    <div class="col-md-12">{{ form.description.label_tag }} {{ form.description }}</div>
+                    <div class="col-md-4">{{ form.stage.label_tag }} {{ form.stage }}</div>
+                    <div class="col-md-4">{{ form.lc_stage.label_tag }} {{ form.lc_stage }}</div>
+                    <div class="col-md-4">{{ form.supervisor.label_tag }} {{ form.supervisor }}</div>
+                    <div class="col-md-6">{{ form.type_description.label_tag }} {{ form.type_description }}</div>
+                    <div class="col-md-3">{{ form.lm.label_tag }} {{ form.lm }}</div>
+                    <div class="col-md-3">{{ form.posted.label_tag }} {{ form.posted }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial -->
+        <div class="col-lg-4">
+            <div class="card p-4 mb-3">
+                <h6 class="text-muted mb-3">Financial</h6>
+                <div class="mb-3">{{ form.estimate.label_tag }} {{ form.estimate }}</div>
+                <div class="mb-3">{{ form.qty.label_tag }} {{ form.qty }}</div>
+                <div class="mb-3">{{ form.supplies_cost.label_tag }} {{ form.supplies_cost }}</div>
+                <div class="mb-3">{{ form.tax_fees.label_tag }} {{ form.tax_fees }}</div>
+                <div class="mb-3">{{ form.cost.label_tag }} {{ form.cost }}</div>
+                <div class="mb-3">{{ form.invoiced_amt.label_tag }} {{ form.invoiced_amt }}</div>
+            </div>
+
+            <div class="card p-4">
+                <h6 class="text-muted mb-3">Additional Details</h6>
+                <div class="mb-3">{{ form.invoice_number.label_tag }} {{ form.invoice_number }}</div>
+                <div class="mb-3">{{ form.delivery_type.label_tag }} {{ form.delivery_type }}</div>
+                <div class="mb-3">{{ form.materials.label_tag }} {{ form.materials }}</div>
+                <div class="mb-3">{{ form.book_number.label_tag }} {{ form.book_number }}</div>
+                <div class="mb-3">{{ form.notes.label_tag }} {{ form.notes }}</div>
+            </div>
+        </div>
+    </div>
+
+    {% if form.errors %}
+    <div class="alert alert-danger mt-3">
+        <ul class="mb-0">
+        {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+            <li><strong>{{ field }}:</strong> {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-accent"><i class="bi bi-plus-lg"></i> Create Entry</button>
+        <a href="{% url 'ledger:entry_list' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}

@@ -73,6 +73,20 @@
                             <i class="bi bi-truck"></i> Suppliers
                         </a>
                     </li>
+                    {% if perms.ledger.add_constructionentry %}
+                    <li class="nav-item ms-2 my-auto">
+                        <a class="btn btn-accent btn-sm" href="{% url 'ledger:entry_create' %}">
+                            <i class="bi bi-plus-lg"></i> New Entry
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if user.is_staff or user.is_superuser %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'audit_log' %}active{% endif %}" href="{% url 'ledger:audit_log' %}">
+                            <i class="bi bi-clock-history"></i> Audit Log
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
